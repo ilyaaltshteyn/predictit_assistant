@@ -1,5 +1,5 @@
-import PredictitData.py as pred
-import insert_contracts_data.py as ins
+import PredictitData as pred
+import insert_contracts_data as ins
 
 
 all_market_tickers = pred.get_all_market_ids()
