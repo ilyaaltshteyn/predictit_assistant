@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # This script hits the predictit API for a list of all market tickers, then for
 # each market ticker it gets all contracts within that market and loads them
 # into the all_contracts table in the predictit_db schema in MySQL.
