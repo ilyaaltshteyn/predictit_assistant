@@ -19,7 +19,6 @@ def get_all_contracts(market_ticker):
 
     url = 'https://www.predictit.org/api/marketdata/ticker/{}'.format(market_ticker)
     response_data = requests.get(url).json()
-    print response_data
     data = {}
 
     for contract in response_data['Contracts']:
