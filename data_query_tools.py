@@ -3,6 +3,10 @@
 import sqlalchemy as sqa
 import MySQLdb
 import pandas as pd
+import matplotlib
+import numpy as np
+import matplotlib.pyplot as plt
+
 
 def get_contract_data(contract_ticker, limit = 100):
     """ Pulls all data for contract, up to limit rows. """
@@ -13,3 +17,12 @@ def get_contract_data(contract_ticker, limit = 100):
     df = pd.read_sql(sql_statement, con)
 
     return df
+
+def plot_yes_shares(contract_ticker, limit = 100):
+    """ Pulls data for a contract, up to limit rows. Plots this data.
+        Must have enabled %matplotlib inline """
+
+    dat = get_contract_data(contract_ticker, limit)
+    dat = dat[['last_trade_price', 'best_buy_yes_cost', 'best_sell_yes_cost']]
+
+    dat.plot.line(figsize = (13,13))
