@@ -25,4 +25,4 @@ def plot_yes_shares(contract_ticker, limit = 100):
     dat = get_contract_data(contract_ticker, limit)
     dat = dat[['last_trade_price', 'best_buy_yes_cost', 'best_sell_yes_cost']]
 
-    dat.plot.line(figsize = (13,13))
+    dat.plot.line(figsize = (13,13), title = contract_ticker)
