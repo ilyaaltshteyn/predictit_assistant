@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/home/ec2-user/anaconda2/bin/python
 
 # Set up some scripts to pull newswire data into a database of headlines
 # Defining some functions to pull data from a news api.
