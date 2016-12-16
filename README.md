@@ -2,4 +2,4 @@
 
 This is a tool that helps to make more informed trades on predictit.com.
 
-It monitors price fluctuations across the predictit market and makes heuristic-based suggestions about when and what to buy.
+It monitors price trends on the predictit market and combines them with other data to make predictions about the best times to buy and sell shares.
