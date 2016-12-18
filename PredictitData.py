@@ -81,10 +81,10 @@ def insert_one_contract(contract_ticker, contract_data, contract_metadata):
                                   sql_friendly(contract_data['last_close_price'])
                                  )
 
-    metadata_sql_statement = """REPLACE INTO all_contracts_metadata
-                                SET contract_ticker = '{0}', market_ticker = '{1}',
-                                predictit_id = {2}, url = '{3}', longname = '{4}',
-                                shortname = '{5}'""".format(sql_friendly(contract_ticker),
+    metadata_sql_statement = """INSERT IGNORE INTO all_contracts_metadata
+                                (contract_ticker, market_ticker, predictit_id, url, longname, shortname)
+                                VALUES ('{0}', '{1}', {2}, '{3}', '{4}', '{5}'""".format(
+                                                            sql_friendly(contract_ticker),
                                                             sql_friendly(contract_metadata['market_ticker']),
                                                             contract_metadata['predictit_id'],
                                                             sql_friendly(contract_metadata['url']),
