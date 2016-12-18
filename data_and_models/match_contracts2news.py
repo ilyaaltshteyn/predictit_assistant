@@ -16,6 +16,7 @@ class headline_finder():
     def __init__(self):
         stops = stopwords.words('english')
         self.stopwords = self.generate_new_stopwords_list(stops)
+        self.last_contract_description = 'there was no last contract...'
 
     def generate_new_stopwords_list(self, nltk_stopwords):
         """ Combines nltk stopwords list with the top 3 % of most common words in
@@ -77,7 +78,7 @@ class headline_finder():
             represents when the contract data was pulled). """
 
         con = sqa.create_engine('mysql+mysqldb://root:@localhost/predictit_db').connect()
-        time_cutoff = reference_time - timedelta(minutes = 30)
+        time_cutoff = reference_time - timedelta(minutes = 300)
         sql_statement = """select * from (select * from news_headlines
                            where record_timestamp > '{0}') a
                            where a.article_timestamp > '{0}' """.format(time_cutoff)
@@ -94,9 +95,15 @@ class headline_finder():
         hlines = self.pull_headlines(reference_time)
 
         scores = []
+        actual_sets = []
         for key, line in hlines.iterrows():
             description = self.strip_stopwords(line['description'])
             scores.append(len(set(longname_words).intersection(set(description))))
+            actual_sets.append(set(longname_words).intersection(set(description)))
 
         hlines['scores'] = scores
-        return hlines[hlines.scores > 0]
+        hlines['actual_sets'] = actual_sets
+
+        self.last_contract_description = str(longname)
+
+        return hlines[hlines.scores > 1]
