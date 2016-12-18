@@ -83,7 +83,7 @@ def insert_one_contract(contract_ticker, contract_data, contract_metadata):
 
     metadata_sql_statement = """INSERT IGNORE INTO all_contracts_metadata
                                 (contract_ticker, market_ticker, predictit_id, url, longname, shortname)
-                                VALUES ('{0}', '{1}', {2}, '{3}', '{4}', '{5}'""".format(
+                                VALUES ('{0}', '{1}', {2}, '{3}', '{4}', '{5}' )""".format(
                                                             sql_friendly(contract_ticker),
                                                             sql_friendly(contract_metadata['market_ticker']),
                                                             contract_metadata['predictit_id'],
