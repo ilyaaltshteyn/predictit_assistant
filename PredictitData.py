@@ -51,7 +51,10 @@ def get_all_contracts(market_ticker):
 
 def sql_friendly(text):
     """ Converts apostrophes to double underscores for MySQL friendliness. """
-    text = str(text)
+    try:
+        text = str(text)
+    except (UnicodeEncodeError, UnicodeDecodeError):
+        continue
     if not text or text == '':
         return 'missing__data'.encode('ascii', 'ignore')
     try:
