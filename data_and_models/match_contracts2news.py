@@ -1,5 +1,3 @@
-# This script matches each news headline to a contract. This will make it
-# possible to include news headlines data in the prediction models.
 import sqlalchemy as sqa
 import pandas as pd
 import re
@@ -18,6 +16,7 @@ class headline_finder():
         self.stopwords = self.generate_new_stopwords_list(stops)
         self.last_contract_description = 'there was no last contract...'
 
+
     def generate_new_stopwords_list(self, nltk_stopwords):
         """ Combines nltk stopwords list with the top 3 % of most common words in
             the contract descriptions. """
@@ -25,12 +24,14 @@ class headline_finder():
         con = sqa.create_engine('mysql+mysqldb://root:@localhost/predictit_db').connect()
         metadata_for_all_contracts = pd.read_sql("select distinct(longname) from all_contracts_metadata",
                                                  con)
+        all_headlines = pd.read_sql("select description from news_headlines", con)
+        headlines_and_metadata = pd.concat([metadata_for_all_contracts.longname, all_headlines.description])
 
         flatten = lambda l: [item for sublist in l for item in sublist]
-        words = flatten([re.findall('\w+', x[0]) for x in metadata_for_all_contracts.values])
+        words = flatten([re.findall('\w+', x[0]) for x in headlines_and_metadata.values])
         preprocessed_words = [self.pre_process(word) for word in words]
 
-        word_counts = Counter(cap_words)
+        word_counts = Counter(preprocessed_words)
         top_3_percent = int(floor(len(word_counts.items())*.03))
         common_words_w_counts = word_counts.most_common(top_3_percent)
         new_stop_words = [word for word, count in common_words_w_counts]
@@ -38,8 +39,10 @@ class headline_finder():
 
         return stops
 
+
     def pre_process(self, text):
-        """ Converts apostrophes to double underscores for MySQL friendliness. """
+        """ Converts apostrophes and other problematic elements to double underscores for
+            MySQL friendliness. """
 
         # First do everything that is done to text that enters mysql:
         try:
@@ -56,6 +59,7 @@ class headline_finder():
         # Strip punctuation:
         return text.translate(None, string.punctuation).lower()
 
+
     def get_contract_metadata(self, contract_ticker):
         """ Pulls all data for contract, up to limit rows. """
 
@@ -65,6 +69,7 @@ class headline_finder():
 
         return df
 
+
     def strip_stopwords(self, text):
         """ Takes in some text (this will be the longname or a news headline) and a list of stopwords.
             Removes stopwords from text. Returns remaining words in text as list. """
@@ -73,12 +78,13 @@ class headline_finder():
         split_preprocessed = [self.pre_process(word) for word in text.split()]
         return [w for w in split_preprocessed if w not in self.stopwords]
 
+
     def pull_headlines(self, reference_time):
         """ Pulls headlines that are within 30 minutes of reference_time (datetime object that
             represents when the contract data was pulled). """
 
         con = sqa.create_engine('mysql+mysqldb://root:@localhost/predictit_db').connect()
-        time_cutoff = reference_time - timedelta(minutes = 300)
+        time_cutoff = reference_time - timedelta(minutes = 30)
         sql_statement = """select * from (select * from news_headlines
                            where record_timestamp > '{0}') a
                            where a.article_timestamp > '{0}' """.format(time_cutoff)
@@ -86,7 +92,7 @@ class headline_finder():
         return df
 
 
-    def find(self, contract_ticker, reference_time):
+    def find(self, contract_ticker, reference_time = datetime.now()):
         """ Pulls contract longname and looks for a headline that might match it within 30 mins
             of the reference time. """
 
@@ -106,4 +112,4 @@ class headline_finder():
 
         self.last_contract_description = str(longname)
 
-        return hlines[hlines.scores > 1]
+        return hlines[hlines.scores > 0]
