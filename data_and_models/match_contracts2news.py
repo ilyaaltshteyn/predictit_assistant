@@ -19,7 +19,9 @@ class headline_finder():
 
     def generate_new_stopwords_list(self, nltk_stopwords):
         """ Combines nltk stopwords list with the top 3 % of most common words in
-            the contract descriptions. """
+            the contract descriptions. Also add numbers 0-100 and 2000-2020. """
+
+        nums = [str(x) for x in range(0, 101)] + [str(x) for x in range(2000, 2021)]
 
         con = sqa.create_engine('mysql+mysqldb://root:@localhost/predictit_db').connect()
         metadata_for_all_contracts = pd.read_sql("select distinct(longname) from all_contracts_metadata",
@@ -34,7 +36,9 @@ class headline_finder():
         word_counts = Counter(preprocessed_words)
         top_3_percent = int(floor(len(word_counts.items())*.03))
         common_words_w_counts = word_counts.most_common(top_3_percent)
-        new_stop_words = [word for word, count in common_words_w_counts]
+
+        # Combine new stop words with numbers!
+        new_stop_words = [word for word, count in common_words_w_counts] + nums
         stops = [w.encode('ascii', 'ignore') for w in nltk_stopwords + new_stop_words]
 
         return stops
@@ -72,7 +76,9 @@ class headline_finder():
 
     def strip_stopwords(self, text):
         """ Takes in some text (this will be the longname or a news headline) and a list of stopwords.
-            Removes stopwords from text. Returns remaining words in text as list. """
+            Removes stopwords from text. Returns remaining words in text as list.
+
+            Number 0-100 and 2000 - 2020 are stopwords. """
 
         text = str(text).encode('ascii', 'ignore')
         split_preprocessed = [self.pre_process(word) for word in text.split()]
@@ -84,7 +90,7 @@ class headline_finder():
             represents when the contract data was pulled). """
 
         con = sqa.create_engine('mysql+mysqldb://root:@localhost/predictit_db').connect()
-        time_cutoff = reference_time - timedelta(minutes = 30)
+        time_cutoff = reference_time - timedelta(minutes = 500)
         sql_statement = """select * from (select * from news_headlines
                            where record_timestamp > '{0}') a
                            where a.article_timestamp > '{0}' """.format(time_cutoff)
@@ -100,10 +106,17 @@ class headline_finder():
         longname_words = self.strip_stopwords(longname)
         hlines = self.pull_headlines(reference_time)
 
+        print longname, longname_words
+
+        # Get the size of the intersection between the stopword-less longname
+        # (contract description) and each headline from the last 30 mins.
         scores = []
         actual_sets = []
+
         for key, line in hlines.iterrows():
-            description = self.strip_stopwords(line['description'])
+            # Use the actual headline, not description:
+            description = self.strip_stopwords(line['headline'])
+
             scores.append(len(set(longname_words).intersection(set(description))))
             actual_sets.append(set(longname_words).intersection(set(description)))
 
